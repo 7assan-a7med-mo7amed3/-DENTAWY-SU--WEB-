@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin - Records</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body{
+  font-family: Arial;
+  background:#f4f4f4;
+  margin:0;
+  padding:15px;
+}
+input,button{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+}
+.card{
+  background:#fff;
+  padding:10px;
+  margin:8px 0;
+  border-radius:8px;
+}
+.delete{
+  background:red;
+  color:#fff;
+  border:none;
+}
+</style>
+</head>
+<body>
+
+<h3>➕ إضافة لينك</h3>
+
+<input id="title" placeholder="اسم المحاضرة">
+<input id="link" placeholder="لينك Google Drive">
+<button onclick="addRecord()">إضافة</button>
+
+<hr>
+
+<h3>🗑️ الحذف</h3>
+<div id="list"></div>
+
+<script>
+const firebaseConfig = {
+  databaseURL: "https://my-records-60940-default-rtdb.europe-west1.firebasedatabase.app/"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database().ref("records");
+
+function addRecord(){
+  const title = document.getElementById("title").value;
+  const link = document.getElementById("link").value;
+
+  if(!title || !link){ alert("اكتب كل حاجة"); return; }
+
+  db.push({
+    title,
+    link,
+    date: new Date().toLocaleDateString()
+  });
+
+  document.getElementById("title").value="";
+  document.getElementById("link").value="";
+}
+
+db.on("value", snap=>{
+  let html="";
+  snap.forEach(item=>{
+    html+=`
+      <div class="card">
+        <b>${item.val().title}</b><br>
+        <button class="delete" onclick="db.child('${item.key}').remove()">حذف</button>
+      </div>
+    `;
+  });
+  document.getElementById("list").innerHTML=html;
+});
+</script>
+
+</body>
+</html>
