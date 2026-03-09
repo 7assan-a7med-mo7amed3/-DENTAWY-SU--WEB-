@@ -1,97 +1,126 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDF Records</title>
-<style>
-body { text-align: center; font-family: "Macondo", cursive; padding: 20px; background-color: #40477F;
-background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='a' gradientUnits='userSpaceOnUse' x1='100' y1='33' x2='100' y2='-3'%3E%3Cstop offset='0' stop-color='%23000' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='1'/%3E%3C/linearGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='100' y1='135' x2='100' y2='97'%3E%3Cstop offset='0' stop-color='%23000' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg fill='%23343c73' fill-opacity='0.6'%3E%3Crect x='100' width='100' height='100'/%3E%3Crect y='100' width='100' height='100'/%3E%3C/g%3E%3Cg fill-opacity='0.5'%3E%3Cpolygon fill='url(%23a)' points='100 30 0 0 200 0'/%3E%3Cpolygon fill='url(%23b)' points='100 100 0 130 0 100 200 100 200 130'/%3E%3C/g%3E%3C/svg%3E"); }
-.card-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 20px; }
-.card { padding: 10px; border: 2px solid black; border-radius: 15px; background: #f0f0f0; }
-button { padding: 5px 10px; margin-top: 5px; border-radius: 10px; cursor: pointer; }
-.searchbar { font-size: 1.2em; border: 2px solid black; border-radius: 25px; padding: 5px 10px; margin-bottom: 10px; }
-</style>
-</head>
-<body>
+<!doctype html>
+<html lang="ar">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PDF</title>
 
-<h2>PDF</h2>
-<input type="text" class="searchbar" placeholder="Search..." onkeyup="searchPDFs()">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-<div class="card-container" id="cardContainer"></div>
+    <style>
+      body {
+        text-align: center;
+        font-family: "Macondo", cursive;
+        padding: 20px;
+        background-color: #40477f;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='a' gradientUnits='userSpaceOnUse' x1='100' y1='33' x2='100' y2='-3'%3E%3Cstop offset='0' stop-color='%23000' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='1'/%3E%3C/linearGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='100' y1='135' x2='100' y2='97'%3E%3Cstop offset='0' stop-color='%23000' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg fill='%23343c73' fill-opacity='0.6'%3E%3Crect x='100' width='100' height='100'/%3E%3Crect y='100' width='100' height='100'/%3E%3C/g%3E%3Cg fill-opacity='0.5'%3E%3Cpolygon fill='url(%23a)' points='100 30 0 0 200 0'/%3E%3Cpolygon fill='url(%23b)' points='100 100 0 130 0 100 200 100 200 130'/%3E%3C/g%3E%3C/svg%3E");
+      }
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script>
-// Firebase config
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://mypdf-c6cb1-default-rtdb.firebaseio.com/",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+      .grid {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+      }
 
-// Load PDFs
-function loadPDFs() {
-  const container = document.getElementById("cardContainer");
-  container.innerHTML = "";
-  db.ref("pdfs").once("value", snapshot => {
-    snapshot.forEach(child => {
-      const pdf = child.val();
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <h3>${pdf.title}</h3>
-        <button onclick="downloadPDF('${pdf.title}', '${child.key}')">Download PDF</button>
-      `;
-      container.appendChild(card);
-    });
-  });
-}
+      .card {
+        padding: 10px;
+        border: 2px solid black;
+        border-radius: 15px;
+        background: #f0f0f0;
+      }
 
-// Download PDF
-function downloadPDF(title, key) {
-  db.ref("pdfs/" + key).once("value", snapshot => {
-    const pdf = snapshot.val();
-    const a = document.createElement("a");
-    a.href = pdf.pdfBase64; // الرابط بصيغة Base64
-    a.download = title + ".pdf"; // اسم الملف
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  });
-}
+      .card a {
+        padding: 5px 10px;
+        margin-top: 5px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
 
-// Search
-function searchPDFs() {
-  const input = document.querySelector(".searchbar").value.toUpperCase();
-  document.querySelectorAll(".card h3").forEach(h3 => {
-    h3.parentElement.style.display = h3.innerText.toUpperCase().includes(input) ? "" : "none";
-  });
-}
+      input {
+        font-size: 1.2em;
+        border: 2px solid black;
+        border-radius: 25px;
+        padding: 5px 10px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>PDF</h2>
 
-window.onload = loadPDFs;
-</script>
-<button id="secretBtn" style="position:fixed;bottom:10px;right:10px;padding:10px;border-radius:10px;">💡</button>
+    <input id="search" placeholder="🔍 ابحث" />
 
-<script>
-// كلمة السر
-const adminPassword = "RAZAK"; // هنا حط الكلمة اللي عايزها
+    <div class="grid" id="pdfs"></div>
 
-document.getElementById("secretBtn").onclick = function() {
-  const input = prompt("Enter admin password:");
-  if(input === adminPassword) {
-    window.location.href = "admin.pdf.html"; // رابط صفحة الادمن
-  } else if(input) {
-    alert("Wrong password!");
-  }
-};
-</script>
+    <script>
+      const firebaseConfig = {
+        databaseURL: "https://mypdf-c6cb1-default-rtdb.firebaseio.com/",
+      };
 
-</body>
+      firebase.initializeApp(firebaseConfig);
+
+      const db = firebase.database().ref("pdfs");
+
+      db.on("value", (snap) => {
+        window.all = [];
+
+        snap.forEach((item) => {
+          all.push(item.val());
+        });
+
+        render(all);
+      });
+
+      document.getElementById("search").oninput = (e) => {
+        const val = e.target.value.toLowerCase();
+
+        render(all.filter((r) => r.title.toLowerCase().includes(val)));
+      };
+
+      function render(list) {
+        let html = "";
+
+        list.forEach((r) => {
+          html += `
+<div class="card">
+<b>${r.title}</b>
+<a href="${r.link}" target="_blank">عرض / تحميل</a>
+</div>
+`;
+        });
+
+        document.getElementById("pdfs").innerHTML = html;
+      }
+    </script>
+
+    <button
+      id="secretBtn"
+      style="
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        padding: 10px;
+        border-radius: 10px;
+      "
+    >
+      💡
+    </button>
+
+    <script>
+      const adminPassword = "RAZAK";
+
+      document.getElementById("secretBtn").onclick = function () {
+        const input = prompt("Enter admin password:");
+
+        if (input === adminPassword) {
+          window.location.href = "admin.pdf.html";
+        } else if (input) {
+          alert("Wrong password!");
+        }
+      };
+    </script>
+  </body>
 </html>
